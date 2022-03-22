@@ -24,7 +24,7 @@ pipeline {
         stage("SonarQube Code Analysis") {
             steps {
                 echo "Running SonarQube Analysis..."
-                withSonarQubeEnv(installationName: 'SonarQube-Server-kwi'){
+                withSonarQubeEnv(installationName: 'beb-sonar-server'){
                     sh "mvn verify sonar:sonar -Dsonar.projectName=${PROJECT}-kwi"
                 }
             }
