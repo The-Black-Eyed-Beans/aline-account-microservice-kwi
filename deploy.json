@@ -1,0 +1,196 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Deploying microservice to AWS via ECS.",
+    "Parameters": {
+        "MicroserviceName": {
+            "Type": "String",
+            "Description": "The name of the microservice."
+        },
+        "AppPort": {
+            "Type": "Number",
+            "Description": "The port used by the microservice."
+        },
+        "ImageTag": {
+            "Type": "String",
+            "Description": "The tag used for the image of the microservice."
+        }
+    },
+
+    "Resources": {
+        "AppService": {
+            "Type": "AWS::ECS::Service",
+            "DependsOn": "ServiceListener",
+            "Properties": {
+                "Cluster": "{{resolve:secretsmanager:aline-kwi/dev/secrets/resources:SecretString:EcsCluster}}",
+                "DeploymentConfiguration": {
+                    "MinimumHealthyPercent": 100,
+                    "MaximumPercent": 200
+                },
+                "DesiredCount": 1,
+                "LaunchType": "FARGATE",
+                "LoadBalancers": [
+                    {
+                        "ContainerName": {
+                            "Fn::Sub": "${MicroserviceName}"
+                        },
+                        "ContainerPort": {
+                            "Ref": "AppPort"
+                        },
+                        "TargetGroupArn": {
+                            "Ref": "ServiceTargetGroup"
+                        }
+                    }
+                ],
+                "NetworkConfiguration": {
+                    "AwsvpcConfiguration": {
+                        "AssignPublicIp": "ENABLED",
+                        "Subnets": [
+                            "{{resolve:secretsmanager:aline-kwi/dev/secrets/resources:SecretString:PrivateSubnet1}}",
+                            "{{resolve:secretsmanager:aline-kwi/dev/secrets/resources:SecretString:PrivateSubnet2}}"
+                        ],
+                        "SecurityGroups": [
+                            "{{resolve:secretsmanager:aline-kwi/dev/secrets/resources:SecretString:AppSecurityGroup}}"
+                        ]
+                    }
+                },
+                "ServiceName": {
+                    "Fn::Sub": "${MicroserviceName}-kwi"
+                },
+                "TaskDefinition": {
+                    "Ref": "ServiceTask"
+                }
+            }
+        },
+
+        "ServiceTask": {
+            "Type": "AWS::ECS::TaskDefinition",
+            "Properties": {
+                "ContainerDefinitions": [
+                    {
+                        "Environment": [
+                            {
+                                "Name": "APP_PORT",
+                                "Value": {
+                                    "Ref": "AppPort"
+                                }
+                            },
+                            {
+                                "Name": "APP_USER_ACCESS_KEY",
+                                "Value": "{{resolve:secretsmanager:aline-kwi/dev/secrets/user-credentials:SecretString:AccessKey}}"
+                            },
+                            {
+                                "Name": "APP_USER_SECRET_KEY",
+                                "Value": "{{resolve:secretsmanager:aline-kwi/dev/secrets/user-credentials:SecretString:SecretKey}}"
+                            },
+                            {
+                                "Name": "ENCRYPT_SECRET_KEY",
+                                "Value": "{{resolve:secretsmanager:aline-kwi/dev/secrets/user-credentials:SecretString:EncryptKey}}"
+                            },
+                            {
+                                "Name": "JWT_SECRET_KEY",
+                                "Value": "{{resolve:secretsmanager:aline-kwi/dev/secrets/user-credentials:SecretString:JWTSecretKey}}"
+                            },
+                            {
+                                "Name": "DB_USERNAME",
+                                "Value": "{{resolve:secretsmanager:aline-kwi/dev/secrets/db:SecretString:Username}}"
+                            },
+                            {
+                                "Name": "DB_PASSWORD",
+                                "Value": "{{resolve:secretsmanager:aline-kwi/dev/secrets/db:SecretString:Password}}"
+                            },
+                            {
+                                "Name": "DB_HOST",
+                                "Value": "{{resolve:secretsmanager:aline-kwi/dev/secrets/db:SecretString:Host}}"
+                            },
+                            {
+                                "Name": "DB_PORT",
+                                "Value": "{{resolve:secretsmanager:aline-kwi/dev/secrets/db:SecretString:Port}}"
+                            },
+                            {
+                                "Name": "DB_NAME",
+                                "Value": "{{resolve:secretsmanager:aline-kwi/dev/secrets/db:SecretString:Name}}"
+                            }
+                        ],
+                        "Essential": true,
+                        "Image": {
+                            "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MicroserviceName}-kwi:${ImageTag}"
+                        },
+                        "LogConfiguration": {
+                            "LogDriver": "awslogs",
+                            "Options": {
+                                "awslogs-group": {
+                                    "Fn::Sub": "/ecs/aline-kwi/${MicroserviceName}"
+                                },
+                                "awslogs-region": {
+                                    "Ref": "AWS::Region"
+                                },
+                                "awslogs-stream-prefix": {
+                                    "Fn::Sub": "${MicroserviceName}-kwi"
+                                },
+                                "awslogs-create-group": "true"
+                            }
+                        },
+                        "Memory": 2048,
+                        "Name": {
+                            "Fn::Sub": "${MicroserviceName}"
+                        },
+                        "PortMappings": [
+                            {
+                                "ContainerPort": {
+                                    "Ref": "AppPort"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "Cpu": 512,
+                "ExecutionRoleArn": "{{resolve:secretsmanager:aline-kwi/dev/secrets/resources:SecretString:TaskExecutionRole}}",
+                "Family": {
+                    "Fn::Sub": "${MicroserviceName}-kwi"
+                },
+                "Memory": 2048,
+                "NetworkMode": "awsvpc",
+                "RequiresCompatibilities": ["FARGATE"],
+                "TaskRoleArn": "{{resolve:secretsmanager:aline-kwi/dev/secrets/resources:SecretString:TaskRole}}"
+            }
+        },
+
+        "ServiceTargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckIntervalSeconds": 60,
+                "HealthCheckPath": "/health",
+                "HealthCheckPort": {
+                    "Ref": "AppPort"
+                },
+                "HealthCheckTimeoutSeconds": 5,
+                "Port": {
+                    "Ref": "AppPort"
+                },
+                "Protocol": "HTTP",
+                "TargetType": "ip",
+                "VpcId": "{{resolve:secretsmanager:aline-kwi/dev/secrets/resources:SecretString:VpcId}}"
+            }
+        },
+
+        "ServiceListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "Type": "forward",
+                        "TargetGroupArn": {
+                            "Ref": "ServiceTargetGroup"
+                        }
+                    }
+                ],
+                "LoadBalancerArn": "{{resolve:secretsmanager:aline-kwi/dev/secrets/resources:SecretString:AppLoadBalancerArn}}",
+                "Port": {
+                    "Ref": "AppPort"
+                },
+                "Protocol": "HTTP"
+            }
+        }
+    }
+}
+    

@@ -21,6 +21,24 @@ pipeline {
             }
         }
 
+        stage("SonarQube Code Analysis") {
+            steps {
+                echo "Running SonarQube Analysis..."
+                withSonarQubeEnv(installationName: 'SonarQube-Server-kwi'){
+                    sh "mvn verify sonar:sonar -Dsonar.projectName=${PROJECT}-kwi"
+                }
+            }
+        }
+
+        stage("Quality Gate"){
+            steps {
+                echo "Waiting for Quality Gate..."
+                timeout(time: 5, unit: "MINUTES") {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage("Package")  {
             steps {
                 sh "mvn package -DskipTests"
@@ -33,6 +51,24 @@ pipeline {
                 sh "sudo docker build -t ${PROJECT}-kwi:${COMMIT_HASH} ."
                 sh "sudo docker tag ${PROJECT}-kwi:${COMMIT_HASH} ${AWS_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}-kwi:${COMMIT_HASH}"
                 sh "sudo docker push ${AWS_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}-kwi:${COMMIT_HASH}"
+            }
+        }
+
+        stage("Deployment") {
+            steps {
+                echo "Deploying ${PROJECT}-kwi..."
+                sh '''
+                aws cloudformation deploy \
+                --stack-name ${PROJECT}-kwi-stack \
+                --template-file deploy.json \
+                --profile keshaun \
+                --capabilities CAPABILITY_IAM \
+                --no-fail-on-empty-changeset \
+                --parameter-overrides \
+                    MicroserviceName=${PROJECT} \
+                    AppPort=8070 \
+                    ImageTag=${COMMIT_HASH}
+                '''
             }
         }
     }
