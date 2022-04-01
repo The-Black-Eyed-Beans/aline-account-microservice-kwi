@@ -1,5 +1,11 @@
+import groovy.json.JsonSlurper
+
 pipeline {
-    agent any
+    agent {
+        node {
+            label "worker-one"
+        }
+    }
 
     tools {
         maven "Maven"
@@ -8,8 +14,11 @@ pipeline {
     environment {
         AWS_ID = credentials("AWS-ACCOUNT-ID")
         REGION = credentials("REGION-KWI")
+        APP = "account"
         PROJECT = "account-microservice"
         COMMIT_HASH = "${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
+        APP_PORT = 8072
+        DEPLOYMENT = "EKS"
     }
 
     stages {
@@ -54,7 +63,10 @@ pipeline {
             }
         }
 
-        stage("Deployment") {
+        stage("ECS Deployment") {
+            when {
+                environment(name: "DEPLOYMENT", value: "ECS")
+            }
             steps {
                 echo "Deploying ${PROJECT}-kwi..."
                 sh '''
@@ -66,9 +78,33 @@ pipeline {
                 --no-fail-on-empty-changeset \
                 --parameter-overrides \
                     MicroserviceName=${PROJECT} \
-                    AppPort=8072 \
+                    AppPort=${APP_PORT} \
                     ImageTag=${COMMIT_HASH}
                 '''
+            }
+        }
+
+        stage("EKS Deployment") {
+            when {
+                environment(name: "DEPLOYMENT", value: "EKS")
+            }
+            steps {
+                echo "Generating .env..."
+                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/resources --region us-east-1 | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export \($k)=\(.[$k])"' > .env"""
+                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/user-credentials --region us-east-1 | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export \($k)=\(.[$k])"' >> .env"""
+                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/db --region us-east-1 | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export Db\($k)=\(.[$k])"' >> .env"""
+                sh "echo 'export ImageTag=${COMMIT_HASH}' >> .env"
+                sh "echo 'export AppPort=${APP_PORT}' >> .env"
+                sh "echo 'export AppName=${APP}' >> .env"
+                sh "echo 'export Project=${PROJECT}' >> .env"
+                sh "echo 'export AwsId=${AWS_ID} >> .env"
+                sh "echo 'export AwsRegion=${REGION} >> .env"
+
+                echo "Deploying ${PROJECT}-kwi..."
+                sh "source .env && envsubst < deployment.yml | kubectl apply -f -"
+
+                echo "Deleting .env..."
+                sh "rm .env"
             }
         }
     }

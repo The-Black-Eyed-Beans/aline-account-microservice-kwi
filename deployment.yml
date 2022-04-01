@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${AppName}-deployment
+  labels:
+    app: ${AppName}
+    role: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${AppName}
+  template:
+    metadata:
+      labels:
+        app: ${AppName}
+        role: microservice
+    spec:
+      containers:
+      - name: ${AppName}
+        image: ${AwsId}.dkr.ecr.${AwsRegion}.amazonaws.com/${Project}-kwi:${ImageTag}
+        ports:
+        - name: ${AppName}
+          containerPort: ${AppPort}
+        env:
+          - name: APP_PORT
+            value: "${AppPort}"
+          - name: APP_USER_ACCESS_KEY
+            value: "${AccessKey}"
+          - name: APP_USER_SECRET_KEY
+            value: "${SecretKey}"
+          - name: ENCRYPT_SECRET_KEY
+            value: "${EncryptKey}"
+          - name: JWT_SECRET_KEY
+            value: "${JWTSecretKey}"
+          - name: DB_USERNAME
+            value: "${DbUsername}"
+          - name: DB_PASSWORD
+            value: "${DbPassword}"
+          - name: DB_HOST
+            value: "${DbHost}"
+          - name: DB_PORT
+            value: "${DbPort}"
+          - name: DB_NAME
+            value: "${DbName}"
+      nodeSelector:
+        nodegroup-network: private
