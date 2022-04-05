@@ -126,6 +126,7 @@ pipeline {
                 sh "echo 'export AwsRegion=${REGION}' >> .env"
 
                 echo "Deploying ${PROJECT}-kwi..."
+                sh "cat .env"
                 sh "aws eks update-kubeconfig --name=aline-kwi-eks --region=us-east-1 --profile keshaun"
                 sh ". .env && envsubst < deployment.yml | kubectl apply -f -"
 
