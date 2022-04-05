@@ -1,5 +1,3 @@
-import groovy.json.JsonSlurper
-
 pipeline {
     agent {
         node {
@@ -90,9 +88,9 @@ pipeline {
             }
             steps {
                 echo "Generating .env..."
-                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/resources --region us-east-1 | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export \($k)=\(.[$k])"' > .env"""
-                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/user-credentials --region us-east-1 | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export \($k)=\(.[$k])"' >> .env"""
-                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/db --region us-east-1 | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export Db\($k)=\(.[$k])"' >> .env"""
+                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/resources --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export \($k)=\(.[$k])"' > .env"""
+                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/user-credentials --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export \($k)=\(.[$k])"' >> .env"""
+                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/db --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export Db\($k)=\(.[$k])"' >> .env"""
                 sh "echo 'export ImageTag=${COMMIT_HASH}' >> .env"
                 sh "echo 'export AppPort=${APP_PORT}' >> .env"
                 sh "echo 'export AppName=${APP}' >> .env"
@@ -101,6 +99,7 @@ pipeline {
                 sh "echo 'export AwsRegion=${REGION} >> .env"
 
                 echo "Deploying ${PROJECT}-kwi..."
+                sh "aws eks update-kubeconfig --name=aline-kwi-eks --region=us-east-1 --profile keshaun"
                 sh "source .env && envsubst < deployment.yml | kubectl apply -f -"
 
                 echo "Deleting .env..."
