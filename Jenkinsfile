@@ -55,6 +55,7 @@ pipeline {
         stage("Docker Build") {
             steps {
                 echo "Authenticating with AWS Credentials..."
+                sh "docker context use default"
                 sh "aws ecr get-login-password --region ${REGION} --profile keshaun | docker login --username AWS --password-stdin ${AWS_ID}.dkr.ecr.${REGION}.amazonaws.com"
 
                 echo "Building Docker Image with Commit Hash as the tag..."
