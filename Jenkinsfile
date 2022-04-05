@@ -99,25 +99,25 @@ pipeline {
             }
             steps {
                 echo "Generating .env..."
-                // sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/resources --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export \($k)=\(.[$k])"' > .env"""
-                // sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/user-credentials --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export \(\$k)=\(.[$k])"' >> .env"""
-                // sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/db --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as $k | "export Db\($k)=\(.[$k])"' >> .env"""
-                sh """aws secretsmanager  get-secret-value --secret-id aline-kwi/dev/secrets/resources --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' > secrets"""
-                sh """aws secretsmanager  get-secret-value --secret-id aline-kwi/dev/secrets/user-credentials --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' >> secrets"""
-                sh """aws secretsmanager  get-secret-value --secret-id aline-kwi/dev/secrets/db --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' >> secrets"""
+                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/resources --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as \$k | "export \\(\$k)=\(.[\$k])"' > .env"""
+                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/user-credentials --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as \$k | "export \\(\$k)=\\(.[\$k])"' >> .env"""
+                sh """aws secretsmanager get-secret-value --secret-id aline-kwi/dev/secrets/db --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' | jq -r 'keys[] as \$k | "export Db\\(\$k)=\\(.[\$k])"' >> .env"""
+                // sh """aws secretsmanager  get-secret-value --secret-id aline-kwi/dev/secrets/resources --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' > secrets"""
+                // sh """aws secretsmanager  get-secret-value --secret-id aline-kwi/dev/secrets/user-credentials --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' >> secrets"""
+                // sh """aws secretsmanager  get-secret-value --secret-id aline-kwi/dev/secrets/db --region us-east-1 --profile keshaun | jq -r '.["SecretString"]' | jq '.' >> secrets"""
                 
-                script {
-                    secretKeys = sh(script: 'cat secrets | jq "keys"', returnStdout: true).trim()
-                    secretValues = sh(script: 'cat secrets | jq "values"', returnStdout: true).trim()
-                    def parser = new JsonSlurper()
-                    def keys = parser.parseText(secretKeys)
-                    def values = parser.parseText(secretValues)
-                    for (key in keys) {
-                        data += "export ${key}=${values[key]}\n"
-                    }
-                }
+                // script {
+                //     secretKeys = sh(script: 'cat secrets | jq "keys"', returnStdout: true).trim()
+                //     secretValues = sh(script: 'cat secrets | jq "values"', returnStdout: true).trim()
+                //     def parser = new JsonSlurper()
+                //     def keys = parser.parseText(secretKeys)
+                //     def values = parser.parseText(secretValues)
+                //     for (key in keys) {
+                //         data += "export ${key}=${values[key]}\n"
+                //     }
+                // }
 
-                writeFile(file: '.env', text: data)
+                // writeFile(file: '.env', text: data)
                 sh "echo 'export ImageTag=${COMMIT_HASH}' >> .env"
                 sh "echo 'export AppPort=${APP_PORT}' >> .env"
                 sh "echo 'export AppName=${APP}' >> .env"
@@ -127,7 +127,7 @@ pipeline {
 
                 echo "Deploying ${PROJECT}-kwi..."
                 sh "aws eks update-kubeconfig --name=aline-kwi-eks --region=us-east-1 --profile keshaun"
-                sh "source .env && envsubst < deployment.yml | kubectl apply -f -"
+                sh ". .env && envsubst < deployment.yml | kubectl apply -f -"
 
                 echo "Deleting .env..."
                 sh "rm .env"
