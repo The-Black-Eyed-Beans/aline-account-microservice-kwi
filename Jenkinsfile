@@ -1,7 +1,3 @@
-import groovy.json.JsonSlurper
-
-def data = ""
-
 pipeline {
     agent {
         node {
