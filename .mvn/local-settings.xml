@@ -31,13 +31,13 @@
                     </snapshots>
                     <id>central</id>
                     <name>libs-release</name>
-                    <url>http://44.204.62.155:8081/artifactory/libs-release</url>
+                    <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-release</url>
                 </repository>
                 <repository>
                     <snapshots />
                     <id>snapshots</id>
                     <name>libs-snapshot</name>
-                    <url>http://44.204.62.155:8081/artifactory/libs-snapshot</url>
+                    <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-snapshot</url>
                 </repository>
             </repositories>
             <pluginRepositories>
@@ -47,13 +47,13 @@
                     </snapshots>
                     <id>central</id>
                     <name>libs-release</name>
-                    <url>http://44.204.62.155:8081/artifactory/libs-release</url>
+                    <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-release</url>
                 </pluginRepository>
                 <pluginRepository>
                     <snapshots />
                     <id>snapshots</id>
                     <name>libs-snapshot</name>
-                    <url>http://44.204.62.155:8081/artifactory/libs-snapshot</url>
+                    <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-snapshot</url>
                 </pluginRepository>
             </pluginRepositories>
             <id>artifactory</id>
@@ -67,14 +67,14 @@
             <id>mirror-of-central</id>
             <mirrorOf>central</mirrorOf>
             <name></name>
-            <url>http://44.204.62.155:8081/artifactory/libs-release</url>
+            <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-release</url>
             <blocked>false</blocked>
         </mirror>
         <mirror>
             <id>mirror-of-snapshots</id>
             <mirrorOf>snapshots</mirrorOf>
             <name></name>
-            <url>http://44.204.62.155:8081/artifactory/libs-snapshot</url>
+            <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-snapshot</url>
             <blocked>false</blocked>
         </mirror>
     </mirrors>

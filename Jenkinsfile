@@ -16,7 +16,7 @@ pipeline {
         PROJECT = "account-microservice"
         COMMIT_HASH = "${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
         APP_PORT = 8072
-        JFROG_URL = "44.204.62.155:8082"
+        JFROG_URL = credentials("ARTIFACTORY-URL-KWI")
         JFROG_USER = credentials("ARTIFACTORY-USER-KWI")
         JFROG_PASS = credentials("ARTIFACTORY-PASSWORD-KWI")
         DEPLOYMENT = "EKS"
