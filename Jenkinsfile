@@ -16,7 +16,6 @@ pipeline {
         PROJECT = "account-microservice"
         COMMIT_HASH = "${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
         APP_PORT = 8072
-        JFROG_MAVEN_URL = credentials("ARTIFACTORY-MAVEN-URL-KWI")
         JFROG_MAVEN_PASS = credentials("ARTIFACTORY-MAVEN-PASSWORD-KWI")
         JFROG_URL = credentials("ARTIFACTORY-URL-KWI")
         JFROG_USER = credentials("ARTIFACTORY-USER-KWI")
@@ -28,7 +27,6 @@ pipeline {
         stage("Git Setup") {
             steps {
                 sh "git submodule init"
-                sh "cd core | git pull | cd .."
                 sh "git submodule update"
             }
         }
