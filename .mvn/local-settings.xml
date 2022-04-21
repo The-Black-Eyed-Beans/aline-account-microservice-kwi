@@ -2,23 +2,23 @@
 <settings xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 http://maven.apache.org/xsd/settings-1.2.0.xsd" xmlns="http://maven.apache.org/SETTINGS/1.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <servers>
         <server>
-            <username>admin</username>
-            <password>AP8FEPYAznXyAU3jDT9ncn5D6uc</password>
+            <username>${env.JFROG_USER}</username>
+            <password>${env.JFROG_MAVEN_PASS}</password>
             <id>central</id>
         </server>
         <server>
-            <username>admin</username>
-            <password>AP8FEPYAznXyAU3jDT9ncn5D6uc</password>
+            <username>${env.JFROG_USER}</username>
+            <password>${env.JFROG_MAVEN_PASS}</password>
             <id>snapshots</id>
         </server>
         <server>
-            <username>admin</username>
-            <password>AP8FEPYAznXyAU3jDT9ncn5D6uc</password>
+            <username>${env.JFROG_USER}</username>
+            <password>${env.JFROG_MAVEN_PASS}</password>
             <id>mirror-of-central</id>
         </server>
         <server>
-            <username>admin</username>
-            <password>AP8FEPYAznXyAU3jDT9ncn5D6uc</password>
+            <username>${env.JFROG_USER}</username>
+            <password>${env.JFROG_MAVEN_PASS}</password>
             <id>mirror-of-snapshots</id>
         </server>
     </servers>
@@ -31,13 +31,13 @@
                     </snapshots>
                     <id>central</id>
                     <name>libs-release</name>
-                    <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-release</url>
+                    <url>http://${env.JFROG_MAVEN_URL}/artifactory/libs-release</url>
                 </repository>
                 <repository>
                     <snapshots />
                     <id>snapshots</id>
                     <name>libs-snapshot</name>
-                    <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-snapshot</url>
+                    <url>http://${env.JFROG_MAVEN_URL}/artifactory/libs-snapshot</url>
                 </repository>
             </repositories>
             <pluginRepositories>
@@ -47,13 +47,13 @@
                     </snapshots>
                     <id>central</id>
                     <name>libs-release</name>
-                    <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-release</url>
+                    <url>http://${env.JFROG_MAVEN_URL}/artifactory/libs-release</url>
                 </pluginRepository>
                 <pluginRepository>
                     <snapshots />
                     <id>snapshots</id>
                     <name>libs-snapshot</name>
-                    <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-snapshot</url>
+                    <url>http://${env.JFROG_MAVEN_URL}/artifactory/libs-snapshot</url>
                 </pluginRepository>
             </pluginRepositories>
             <id>artifactory</id>
@@ -67,14 +67,14 @@
             <id>mirror-of-central</id>
             <mirrorOf>central</mirrorOf>
             <name></name>
-            <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-release</url>
+            <url>http://${env.JFROG_MAVEN_URL}/artifactory/libs-release</url>
             <blocked>false</blocked>
         </mirror>
         <mirror>
             <id>mirror-of-snapshots</id>
             <mirrorOf>snapshots</mirrorOf>
             <name></name>
-            <url>http://artifactory.keshaun.theblackeyedbeans.net:8081/artifactory/libs-snapshot</url>
+            <url>http://${env.JFROG_MAVEN_URL}/artifactory/libs-snapshot</url>
             <blocked>false</blocked>
         </mirror>
     </mirrors>
