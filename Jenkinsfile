@@ -25,10 +25,16 @@ pipeline {
     }
 
     stages {
-        stage("Test") {
+        stage("Git Setup") {
             steps {
                 sh "git submodule init"
+                sh "cd core | git pull | cd .."
                 sh "git submodule update"
+            }
+        }
+        
+        stage("Test") {
+            steps {
                 sh "mvn clean test"
             }
         }

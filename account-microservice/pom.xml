@@ -79,12 +79,12 @@
         <snapshotRepository>
             <id>snapshots</id>
             <name>b38a47b2a1a3-snapshots</name>
-            <url>http://${env.JFROG_MAVEN_URL}/artifactory/libs-snapshot</url>
+            <url>http://${env.JFROG_URL}/artifactory/libs-snapshot</url>
         </snapshotRepository>
         <repository>
             <id>central</id>
             <name>b38a47b2a1a3-releases</name>
-            <url>http://${env.JFROG_MAVEN_URL}/artifactory/libs-release</url>
+            <url>http://${env.JFROG_URL}/artifactory/libs-release</url>
         </repository>
     </distributionManagement>
     <build>
